@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Socket.io</title>
+  <style>
+    #messages {
+  display: flex;
+  flex-direction: column;
+}
+
+#messages p {
+  display: inline-block;
+  padding: 8px 12px;
+  margin: 4px;
+  border-radius: 8px;
+  word-break: break-word;
+  font-family: Arial, sans-serif;
+}
+
+.my-message {
+  align-self: flex-end;
+  background-color: rgb(0, 202, 0);
+  color: black;
+}
+
+.other-message {
+  align-self: flex-start;
+  background-color: black;
+  color: white;
+}
+
+  </style>
+</head>
+<body>
+  <h1>Chat App</h1>
+  <input type="text" id="message" placeholder="Enter Message" />
+  <button id="sendBtn">Send</button>
+  
+  <div id="messages"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    console.log(socket,"socket")
+    const userName = prompt('Enter your name');
+   
+
+    const sendBtn = document.getElementById("sendBtn");
+    const messageInput = document.getElementById("message");
+    const allMessages = document.getElementById("messages");
+
+    // Receive message
+    socket.on("message", (message) => {
+      const p = document.createElement("p");
+      p.innerText = `${message.user}: ${message.text}`;
+      if (message.user === userName) {
+        p.classList.add("my-message");
+      } else {
+        p.classList.add("other-message");
+      }
+      allMessages.appendChild(p);
+    });
+
+
+
+    // Send message
+    sendBtn.addEventListener("click", () => {
+      const text = messageInput.value;
+      socket.emit("user-message", { user: userName, text });
+      messageInput.value = ''; // clear input after sending
+    });
+  </script>
+</body>
+</html>
