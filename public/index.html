@@ -6,11 +6,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Socket.io</title>
   <style>
+
+    body{
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      justify-content: center;
+      align-items: center;
+    }
     #messages {
   display: flex;
   flex-direction: column;
-}
+  width: 80%;
+  overflow-y: auto;
+  height: 80vh;
+  border: 1px solid black;
+  
 
+}
+.input{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80%;
+  margin: 12px;
+   gap: 6px;
+}
+.input-room{
+    display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80%;
+   gap: 6px;
+  
+}
+#message{
+  width: 50%;
+  background-color: white;
+  color: black;
+  padding: 12px;
+ 
+   border-radius: 22px;
+   outline: none;
+}
+#room{
+ width: 50%;
+  background-color: white;
+  color: black;
+  padding: 12px;
+  gap: 6px;
+  border-radius: 22px;
+}
+#sendBtn{
+  cursor: pointer;
+  padding: 12px 32px;
+  font-size: 16px;
+  border-radius: 22px;
+}
+#joinBtn{
+  cursor: pointer;
+  padding: 12px 32px;
+  font-size: 16px;
+  border-radius: 22px;
+}
 #messages p {
   display: inline-block;
   padding: 8px 12px;
@@ -35,22 +95,46 @@
   </style>
 </head>
 <body>
-  <h1>Chat App</h1>
-  <input type="text" id="message" placeholder="Enter Message" />
-  <button id="sendBtn">Send</button>
-  
   <div id="messages"></div>
+  <div class="input">
+    <input type="text" id="message" placeholder="Enter Message" />
+    <button id="sendBtn">Send</button>
+  </div>
+ 
+  
+  <div class="input-room">
+    <input type="text" id="room" placeholder="Room Name" />
+    <button id="joinBtn">Join</button>
+  </div>
+  
+  
+  
+
+  
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io();
-    console.log(socket,"socket")
-    const userName = prompt('Enter your name');
-   
+    
+    
+    
+     const token = prompt('Enter your token:');
+    const socket = io({
+      query: { token }
+    });
 
-    const sendBtn = document.getElementById("sendBtn");
+    socket.on('connect_error', (err) => {
+      alert('Connection failed: ' + err.message);
+    });
+    
+
     const messageInput = document.getElementById("message");
+    const sendBtn = document.getElementById("sendBtn");
+    const roomInput=document.getElementById('room');
+    const joinBtn=document.getElementById('joinBtn')
     const allMessages = document.getElementById("messages");
+    const userName = prompt('Enter your name');
+    let currentRoom=null;
+    
 
     // Receive message
     socket.on("message", (message) => {
@@ -67,11 +151,28 @@
 
 
     // Send message
+     joinBtn.addEventListener('click', ()=>{
+      const room=roomInput.value.trim();
+      if(room){
+        socket.emit('join-room', {room,user:userName});
+        currentRoom=room;
+        roomInput.value='';
+      }
+
+    })
     sendBtn.addEventListener("click", () => {
-      const text = messageInput.value;
-      socket.emit("user-message", { user: userName, text });
-      messageInput.value = ''; // clear input after sending
+      const text = messageInput.value.trim();
+      if(text && currentRoom){
+          socket.emit("user-message", { user: userName, text,room:currentRoom });
+          messageInput.value = ''; 
+      }
+    
+      
     });
+    socket.on('room-full', (room) => {
+      alert(`Room ${room} is already full!`);
+    });
+   
   </script>
 </body>
 </html>
